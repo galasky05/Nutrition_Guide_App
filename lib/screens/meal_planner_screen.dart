@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/meal_planner_provider.dart';
 import '../models/food_model.dart';
+import '../providers/history_provider.dart';
 
 class MealPlannerScreen extends StatelessWidget {
   const MealPlannerScreen({super.key});
@@ -353,6 +354,40 @@ class MealPlannerScreen extends StatelessWidget {
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                    // TOMBOL SIMPAN KE RIWAYAT - DITAMBAHKAN DI SINI
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          provider.saveToHistory(
+                            Provider.of<HistoryProvider>(context, listen: false),
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Berhasil disimpan ke Riwayat!"),
+                              duration: Duration(milliseconds: 1200),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF3E6A49),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 3,
+                        ),
+                        child: const Text(
+                          "Simpan ke Riwayat",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ],

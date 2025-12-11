@@ -11,10 +11,8 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic>? userData;
-  List<Map<String, dynamic>> recentHistory = [];
   bool loading = true;
-  StreamSubscription? _userDataSubscription;
-  StreamSubscription? _historySubscription;
+  StreamSubscription<DocumentSnapshot>? _userDataSubscription;
 
   @override
   void initState() {
@@ -33,24 +31,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           .listen((doc) {
         if (doc.exists) {
           setState(() {
-            userData = doc.data() as Map<String, dynamic>?;
+            userData = doc.data();
             loading = false;
           });
         }
-      });
-
-      // Listen ke perubahan history secara real-time
-      _historySubscription = FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('consumption_history')
-          .orderBy('timestamp', descending: true)
-          .limit(5)
-          .snapshots()
-          .listen((snapshot) {
-        setState(() {
-          recentHistory = snapshot.docs.map((d) => d.data() as Map<String, dynamic>).toList();
-        });
       });
     }
   }
@@ -58,7 +42,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void dispose() {
     _userDataSubscription?.cancel();
-    _historySubscription?.cancel();
     super.dispose();
   }
 
@@ -223,10 +206,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Row(children: [Container(padding: EdgeInsets.all(6), decoration: BoxDecoration(color: Color(0xFF6E9B6A).withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Icon(Icons.history, color: Color(0xFF6E9B6A), size: 18)), SizedBox(width: 8), Text("Riwayat Konsumsi", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF3E6A49)))]),
-                            TextButton(onPressed: () {}, child: Text("Lihat Semua", style: TextStyle(fontSize: 11, color: Color(0xFF6E9B6A)))),
+                            TextButton(onPressed: () {
+                              Navigator.pushNamed(context, '/history');
+                            }, child: Text("Lihat Semua", style: TextStyle(fontSize: 11, color: Color(0xFF6E9B6A)))),
                           ],
                         ),
-                        recentHistory.isEmpty ? Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 16), child: Text("Belum ada riwayat", style: TextStyle(color: Colors.grey, fontSize: 12)))) : Column(children: recentHistory.map((item) => _historyItem(item)).toList()),
+                        Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 16), child: Text("Belum ada riwayat", style: TextStyle(color: Colors.grey, fontSize: 12)))),
                       ],
                     )),
 
@@ -258,22 +243,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: EdgeInsets.all(10),
       decoration: BoxDecoration(color: Color(0xFFF5F9F4), borderRadius: BorderRadius.circular(10)),
       child: Column(children: [Icon(icon, size: 20, color: Color(0xFF6E9B6A)), SizedBox(height: 4), Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF3E6A49))), Text(label, style: TextStyle(fontSize: 10, color: Colors.grey[600]))]),
-    );
-  }
-
-  Widget _historyItem(Map<String, dynamic> item) {
-    return Container(
-      margin: EdgeInsets.only(top: 8),
-      padding: EdgeInsets.all(10),
-      decoration: BoxDecoration(color: Color(0xFFF5F9F4), borderRadius: BorderRadius.circular(8)),
-      child: Row(
-        children: [
-          Container(padding: EdgeInsets.all(6), decoration: BoxDecoration(color: Color(0xFF6E9B6A).withOpacity(0.2), borderRadius: BorderRadius.circular(6)), child: Icon(Icons.restaurant, size: 16, color: Color(0xFF6E9B6A))),
-          SizedBox(width: 10),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(item['foodName'] ?? "Makanan", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)), Text("${item['calories'] ?? 0} kal • ${item['protein'] ?? 0}g protein", style: TextStyle(fontSize: 10, color: Colors.grey[600]))])),
-          Text(item['date'] ?? "Hari ini", style: TextStyle(fontSize: 10, color: Colors.grey[500])),
-        ],
-      ),
     );
   }
 }

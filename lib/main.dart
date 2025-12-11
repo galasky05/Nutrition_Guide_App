@@ -7,9 +7,16 @@ import 'screens/register_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/search_food_screen.dart';
 import 'screens/meal_planner_screen.dart';
-import 'providers/meal_planner_provider.dart';
-import 'firebase_options.dart';
+import 'screens/history_screen.dart';
+import 'widgets/empty_screen.dart';
+
+
 import 'main_navigation.dart';
+
+import 'providers/meal_planner_provider.dart';
+import 'providers/history_provider.dart';    
+
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,8 +31,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => MealPlannerProvider(),
+    return MultiProvider(                     // <<< Ubah jadi MultiProvider
+      providers: [
+        ChangeNotifierProvider(create: (_) => MealPlannerProvider()),
+        ChangeNotifierProvider(create: (_) => HistoryProvider()), // <<< WAJIB
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         initialRoute: "/",
@@ -35,9 +45,12 @@ class MyApp extends StatelessWidget {
           "/register": (context) => RegisterScreen(),
           "/main": (context) => const MainNavigation(),
 
-          // Tambahkan route untuk Food Search & Meal Planner
           "/foodSearch": (context) => const SearchFoodScreen(),
           "/mealPlanner": (context) => const MealPlannerScreen(),
+          "/history": (context) => const HistoryScreen(),
+          "/historyDetail": (context) => const EmptyScreen(), 
+
+
         },
       ),
     );

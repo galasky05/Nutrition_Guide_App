@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/food_model.dart';
+import 'history_provider.dart'; // ⬅️ Tambahkan import ini
 
 class MealPlannerProvider with ChangeNotifier {
   final List<Food> _selectedFoods = [];
@@ -13,24 +14,32 @@ class MealPlannerProvider with ChangeNotifier {
 
   int get targetCalories => _targetCalories;
 
-  // Method untuk set target kalori dari HomeScreen
+  // Set target kalori dari HomeScreen
   void setTargetCalories(int calories) {
     _targetCalories = calories;
     notifyListeners();
   }
 
+  // Menambah makanan
   void addFood(Food food) {
     _selectedFoods.add(food);
     notifyListeners();
   }
 
+  // Menghapus makanan
   void removeFood(Food food) {
     _selectedFoods.remove(food);
     notifyListeners();
   }
 
+  // Menghapus semua makanan
   void clearAll() {
     _selectedFoods.clear();
     notifyListeners();
+  }
+
+  // ⬇⬇⬇ TAMBAHKAN FUNGSI INI ⬇⬇⬇
+  void saveToHistory(HistoryProvider historyProvider) {
+    historyProvider.addHistory(foods: List<Food>.from(_selectedFoods));
   }
 }

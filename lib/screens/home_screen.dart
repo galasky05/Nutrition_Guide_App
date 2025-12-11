@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import '../providers/meal_planner_provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -14,29 +15,45 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? userData;
   bool loading = true;
+  StreamSubscription<DocumentSnapshot>? _userDataSubscription;
 
   @override
   void initState() {
     super.initState();
-    fetchUser();
+    _listenToUserData();
   }
 
-  Future<void> fetchUser() async {
+  void _listenToUserData() {
     final uid = FirebaseAuth.instance.currentUser!.uid;
-    final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
-    setState(() {
-      userData = doc.data();
-      loading = false;
-    });
+    
+    // Listen ke perubahan data user secara real-time
+    _userDataSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .listen((doc) {
+      if (doc.exists) {
+        setState(() {
+          userData = doc.data();
+          loading = false;
+        });
 
-    // Set target kalori ke provider setelah data user dimuat
-    if (userData != null) {
-      final calories = calculateCalories().toInt();
-      if (mounted) {
-        Provider.of<MealPlannerProvider>(context, listen: false)
-            .setTargetCalories(calories);
+        // Update target kalori ke provider setiap ada perubahan
+        if (userData != null) {
+          final calories = calculateCalories().toInt();
+          if (mounted) {
+            Provider.of<MealPlannerProvider>(context, listen: false)
+                .setTargetCalories(calories);
+          }
+        }
       }
-    }
+    });
+  }
+
+  @override
+  void dispose() {
+    _userDataSubscription?.cancel();
+    super.dispose();
   }
 
   double calculateCalories() {
